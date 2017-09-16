@@ -1,0 +1,125 @@
+Lab 6a - Pig Commands
+
+1) Local Mode to activate Grunt
+pig -x local
+
+2) MapReduce Mode
+pig -x mapreduce   # can also start by just "pig"
+
+3) Create file of employee and salaries
+cat > wrt
+100	10000	peter
+101	13000	mark
+102	9000	ruth
+103	15000	luke
+104	8000	david
+105	14000	joseph
+106	15000	daniel
+107	20000	samson
+108	12000	stepher
+109	14000	haddin
+110	18000	warnor
+111	15000	watson
+
+4) Load the input data to process
+pig -x local
+emp = LOAD'/home/cloudera/wrt' AS(id:int,sal:int,name:chararray);
+
+5) Examine Contents using dump
+DUMP emp;
+
+# Output:
+2017-09-16 15:49:17,858 [main] INFO  org.apache.hadoop.mapreduce.lib.input.FileInputFormat - Total input paths to process : 1
+2017-09-16 15:49:17,858 [main] INFO  org.apache.pig.backend.hadoop.executionengine.util.MapRedUtil - Total input paths to process : 1
+(100,10000,peter)
+(101,13000,mark)
+(102,9000,ruth)
+(103,15000,luke)
+(104,8000,david)
+(105,14000,joseph)
+(106,15000,daniel)
+(107,20000,samson)
+(108,12000,stepher)
+(109,14000,haddin)
+(110,18000,warnor)
+(111,15000,watson)
+
+6) Describe the types for the emp relation
+DESCRIBE emp;
+
+# Output:
+emp: {id: int,sal: int,name: chararray}
+
+7) Default field type as byte array type
+emp1 = LOAD'/home/cloudera/wrt' AS(id,sal,name);
+DESCRIBE emp1;
+
+# Output:
+emp1: {id: bytearray,sal: bytearray,name: bytearray}
+
+8) Set one type and rest default
+emp2 = LOAD'/home/cloudera/wrt' AS(id:int,sal,name);
+DESCRIBE emp2;
+
+# Output:
+emp2: {id: int,sal: bytearray,name: bytearray}
+
+9) Failed schema
+emp3 = LOAD'/home/cloudera/wrt;
+DESCRIBE emp3;
+
+# Output:
+Schema for emp3 unknown.
+
+10) Filtering Data
+filtered_emp = FILTER emp BY sal>13000;
+DUMP filtered_emp;
+DESCRIBE filtered_emp;
+
+# Output:
+(103,15000,luke)
+(105,14000,joseph)
+(106,15000,daniel)
+(107,20000,samson)
+(109,14000,haddin)
+(110,18000,warnor)
+(111,15000,watson)
+
+filtered_emp: {id: int,sal: int,name: chararray}
+
+11) Grouping Data
+grouped_emp = GROUP emp BY sal;
+DUMP grouped_emp;
+DESCRIBE grouped_emp;
+
+# Output:
+(8000,{(104,8000,david)})
+(9000,{(102,9000,ruth)})
+(10000,{(100,10000,peter)})
+(12000,{(108,12000,stepher)})
+(13000,{(101,13000,mark)})
+(14000,{(109,14000,haddin),(105,14000,joseph)})
+(15000,{(111,15000,watson),(106,15000,daniel),(103,15000,luke)})
+(18000,{(110,18000,warnor)})
+(20000,{(107,20000,samson)})
+
+grouped_emp: {group: int,emp: {(id: int,sal: int,name: chararray)}}
+
+12) Group ALL
+grouped_emp = GROUP emp ALL;
+DESCRIBE grouped_emp;
+
+# Output:
+grouped_emp: {group: chararray,emp: {(id: int,sal: int,name: chararray)}}
+
+13) FOREACH and GENERATE (to find max salary)
+max_sal = FOREACH grouped_emp GENERATE group,MAX(emp.sal);
+DUMP max_sal;
+
+# Output:
+(all,20000)
+
+
+
+
+
